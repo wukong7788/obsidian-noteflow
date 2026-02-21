@@ -21,3 +21,4 @@ build/
 
 # PNPM
 pnpm-debug.log*
+infrastructure/wechat-cloud-hosting/.env

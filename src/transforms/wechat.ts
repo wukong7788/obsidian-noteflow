@@ -48,9 +48,14 @@ function processInline(text: string, styles: ThemeStyles): string {
         return escapeHtml(alias ?? _note);
     });
 
-    // Images  ![alt](url)  → placeholder
-    text = text.replace(/!\[([^\]]*)\]\([^)]*\)/g, (_m, alt: string) => {
-        return `<em style="color:#888;">[Image: ${escapeHtml(alt || "图片")}]</em>`;
+    // Images  ![alt](url)  → <img> tag
+    text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt: string, url: string) => {
+        return `<img src="${url}" alt="${escapeHtml(alt)}" style="max-width:100%;display:block;margin:10px auto;">`;
+    });
+
+    // WikiLink images  ![[image.png|100]]
+    text = text.replace(/!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, path: string) => {
+        return `<img src="${path}" style="max-width:100%;display:block;margin:10px auto;">`;
     });
 
     // Markdown links  [text](url)  → text only (no external links in WeChat)

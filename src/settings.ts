@@ -11,6 +11,12 @@ export interface NoteFlowSettings {
     wechatMapH1toH2: boolean;
     /** XHS: soft-wrap max chars per line (0 = disabled) */
     xhsMaxLineLength: number;
+    /** API: Cloudflare Worker URL for WeChat API proxy */
+    wechatWorkerUrl: string;
+    /** API: Secret key for verifying NoteFlow -> CF Worker requests */
+    wechatWorkerSecret: string;
+    /** WeChat: default cover image ID */
+    wechatDefaultCoverId: string;
 }
 
 export const DEFAULT_SETTINGS: NoteFlowSettings = {
@@ -18,6 +24,9 @@ export const DEFAULT_SETTINGS: NoteFlowSettings = {
     xhsHeadingStyle: "brackets",
     wechatMapH1toH2: true,
     xhsMaxLineLength: 60,
+    wechatWorkerUrl: "",
+    wechatWorkerSecret: "",
+    wechatDefaultCoverId: "",
 };
 
 export class NoteFlowSettingTab extends PluginSettingTab {
@@ -90,6 +99,52 @@ export class NoteFlowSettingTab extends PluginSettingTab {
                             this.plugin.settings.xhsMaxLineLength = num;
                             await this.plugin.saveSettings();
                         }
+                    })
+            );
+
+        // ── API Integration (v0.2.1) ──────────────────────────────────────────
+        containerEl.createEl("h3", { text: "Proxy Server Settings (VPS/Cloud)" });
+        containerEl.createEl("p", {
+            text: "Connect to your self-hosted VPS or WeChat Cloud Hosting proxy to sync content and images.",
+            cls: "setting-item-description"
+        });
+
+        new Setting(containerEl)
+            .setName("Proxy Server URL")
+            .setDesc("The public URL of your proxy server (e.g., http://your-vps-ip:3000).")
+            .addText((text) =>
+                text
+                    .setPlaceholder("http://1.2.3.4:3000")
+                    .setValue(this.plugin.settings.wechatWorkerUrl)
+                    .onChange(async (value) => {
+                        this.plugin.settings.wechatWorkerUrl = value.trim();
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Proxy Secret")
+            .setDesc("The NOTEFLOW_SECRET defined in your server's .env file.")
+            .addText((text) =>
+                text
+                    .setPlaceholder("Enter secret key...")
+                    .setValue(this.plugin.settings.wechatWorkerSecret)
+                    .onChange(async (value) => {
+                        this.plugin.settings.wechatWorkerSecret = value.trim();
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Default Cover Media ID")
+            .setDesc("The media_id of the default cover image to use when no images are present in the note.")
+            .addText((text) =>
+                text
+                    .setPlaceholder("Optional")
+                    .setValue(this.plugin.settings.wechatDefaultCoverId)
+                    .onChange(async (value) => {
+                        this.plugin.settings.wechatDefaultCoverId = value;
+                        await this.plugin.saveSettings();
                     })
             );
     }

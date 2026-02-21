@@ -1,6 +1,6 @@
 {
-  "name": "noteflow",
-  "version": "0.1.1",
+  "name": "NoteFlow",
+  "version": "0.2.1",
   "description": "Obsidian plugin: convert notes to WeChat HTML and XHS plain text",
   "main": "main.js",
   "scripts": {

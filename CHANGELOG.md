@@ -2,6 +2,24 @@
 
 All notable changes to NoteFlow will be documented in this file.
 
+## [0.2.1] - 2026-02-22
+### Added
+- **Auto Image Upload**: Local images detected in notes are automatically uploaded to WeChat on sync.
+- **Image URL Replacement**: Local image paths in the HTML are replaced with permanent WeChat CDN URLs.
+- **Smart Cover Selection**: First image in the note is auto-selected and uploaded as the article cover.
+- **Default Cover Setting**: A fallback `media_id` can be configured for text-only notes.
+
+### Fixed
+- **Preview now shows local images**: Preview modal correctly resolves Obsidian vault image paths.
+- **URL-encoded paths**: Image filenames containing spaces (e.g. `截图%202026.png`) are now correctly decoded and resolved.
+- **Permanent materials API**: Cover images are uploaded via `add_material` (10MB limit) instead of temporary thumb API (64KB limit), resolving the `invalid media_id` error.
+- **WikiLink aliases**: Images with aliases like `![[image.png|100]]` are now correctly processed.
+
+## [0.2.0] - 2026-02-21
+### Added
+- **Direct WeChat Sync**: Establish API bridge via VPS/Cloud Hosting Proxy.
+- **Frontmatter Parsing**: Extract Title, Author, and Digest from Obsidian metadata.
+
 ## [0.1.1] – 2026-02-21
 
 ### Added

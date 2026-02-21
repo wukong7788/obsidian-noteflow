@@ -1,7 +1,7 @@
 {
     "id": "noteflow",
     "name": "NoteFlow",
-    "version": "0.1.1",
+    "version": "0.2.1",
     "minAppVersion": "1.4.0",
     "description": "Copy notes as WeChat HTML or XHS plain text with one command.",
     "author": "ron",

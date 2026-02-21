@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  noteflow-proxy:
+    build: .
+    container_name: noteflow-proxy
+    restart: always
+    ports:
+      - "3000:80"
+    # This will load variables from the .env file in the same directory
+    env_file:
+      - .env
+    environment:
+      - PORT=80
