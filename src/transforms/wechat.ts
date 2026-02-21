@@ -1,16 +1,15 @@
-/**
- * wechat.ts
- * Pure transform: Markdown string → WeChat-safe HTML string.
- * No Obsidian dependency – fully unit-testable.
- */
+import { THEMES, ThemeStyles } from "../styles/themes";
 
 export interface WechatOptions {
     /** Map H1 → H2, H2 → H3 (default: true) */
     mapH1toH2: boolean;
+    /** Theme name (default: "default") */
+    theme: string;
 }
 
 const DEFAULT_OPTIONS: WechatOptions = {
     mapH1toH2: true,
+    theme: "default",
 };
 
 // ---------------------------------------------------------------------------
@@ -26,10 +25,10 @@ function escapeHtml(text: string): string {
 }
 
 /** Process inline markup within a text segment (bold, em, inline code, links). */
-function processInline(text: string): string {
+function processInline(text: string, styles: ThemeStyles): string {
     // Inline code  `code`
     text = text.replace(/`([^`]+)`/g, (_m, code: string) => {
-        return `<code style="font-family:monospace;background:#f5f5f5;padding:2px 4px;border-radius:3px">${escapeHtml(code)}</code>`;
+        return `<code style="${styles.code}">${escapeHtml(code)}</code>`;
     });
 
     // Bold+italic  ***text***
@@ -51,7 +50,7 @@ function processInline(text: string): string {
 
     // Images  ![alt](url)  → placeholder
     text = text.replace(/!\[([^\]]*)\]\([^)]*\)/g, (_m, alt: string) => {
-        return `<em>[Image: ${escapeHtml(alt || "图片")}]</em>`;
+        return `<em style="color:#888;">[Image: ${escapeHtml(alt || "图片")}]</em>`;
     });
 
     // Markdown links  [text](url)  → text only (no external links in WeChat)
@@ -66,7 +65,7 @@ function processInline(text: string): string {
 
 
 
-function renderFencedCode(lines: string[]): { html: string; consumed: number } | null {
+function renderFencedCode(lines: string[], styles: ThemeStyles): { html: string; consumed: number } | null {
     if (!/^```/.test(lines[0])) return null;
     const lang = lines[0].slice(3).trim();
     const endIdx = lines.findIndex((l, i) => i > 0 && /^```/.test(l));
@@ -74,11 +73,11 @@ function renderFencedCode(lines: string[]): { html: string; consumed: number } |
     const consumed = endIdx === -1 ? lines.length : endIdx + 1;
     const code = escapeHtml(codeLines.join("\n"));
     const langAttr = lang ? ` data-lang="${escapeHtml(lang)}"` : "";
-    const html = `<pre${langAttr} style="background:#f5f5f5;padding:12px;border-radius:4px;overflow-x:auto"><code style="font-family:monospace;font-size:0.9em">${code}</code></pre>`;
+    const html = `<pre${langAttr} style="${styles.pre}"><code style="font-family:monospace;font-size:0.9em">${code}</code></pre>`;
     return { html, consumed };
 }
 
-function renderTable(block: string[]): string | null {
+function renderTable(block: string[], styles: ThemeStyles): string | null {
     // Must have at least header + separator
     if (block.length < 2) return null;
     const sepLine = block[1];
@@ -95,20 +94,20 @@ function renderTable(block: string[]): string | null {
     const rows = block.slice(2).map(parseRow);
 
     const thCells = headers
-        .map((h) => `<th style="border:1px solid #ddd;padding:6px 10px;background:#f0f0f0">${processInline(h)}</th>`)
+        .map((h) => `<th style="${styles.th}">${processInline(h, styles)}</th>`)
         .join("");
     const trHead = `<tr>${thCells}</tr>`;
 
     const trBody = rows
         .map((cells) => {
             const tds = cells
-                .map((c) => `<td style="border:1px solid #ddd;padding:6px 10px">${processInline(c)}</td>`)
+                .map((c) => `<td style="${styles.td}">${processInline(c, styles)}</td>`)
                 .join("");
             return `<tr>${tds}</tr>`;
         })
         .join("");
 
-    return `<table style="border-collapse:collapse;width:100%"><thead>${trHead}</thead><tbody>${trBody}</tbody></table>`;
+    return `<table style="${styles.table}"><thead>${trHead}</thead><tbody>${trBody}</tbody></table>`;
 }
 
 function headingLevel(line: string, mapH1toH2: boolean): { level: number; text: string } | null {
@@ -127,6 +126,8 @@ function headingLevel(line: string, mapH1toH2: boolean): { level: number; text: 
 
 export function markdownToWechat(markdown: string, options: Partial<WechatOptions> = {}): string {
     const opts: WechatOptions = { ...DEFAULT_OPTIONS, ...options };
+    const styles = THEMES[opts.theme] || THEMES.default;
+
     const lines = markdown.split("\n");
     const htmlParts: string[] = [];
 
@@ -142,7 +143,7 @@ export function markdownToWechat(markdown: string, options: Partial<WechatOption
 
         // Fenced code block
         if (/^```/.test(line)) {
-            const result = renderFencedCode(lines.slice(i));
+            const result = renderFencedCode(lines.slice(i), styles);
             if (result) {
                 htmlParts.push(result.html);
                 i += result.consumed;
@@ -154,9 +155,9 @@ export function markdownToWechat(markdown: string, options: Partial<WechatOption
         const heading = headingLevel(line, opts.mapH1toH2);
         if (heading) {
             const tag = `h${heading.level}`;
-            const fontSize = heading.level === 2 ? "1.4em" : heading.level === 3 ? "1.2em" : "1em";
+            const headerStyle = heading.level === 2 ? styles.h2 : styles.h3;
             htmlParts.push(
-                `<${tag} style="font-size:${fontSize};font-weight:bold;margin:16px 0 8px">${processInline(heading.text)}</${tag}>`
+                `<${tag} style="${headerStyle}">${processInline(heading.text, styles)}</${tag}>`
             );
             i++;
             continue;
@@ -169,9 +170,9 @@ export function markdownToWechat(markdown: string, options: Partial<WechatOption
                 quoteLines.push(lines[i].replace(/^>\s?/, ""));
                 i++;
             }
-            const inner = quoteLines.map((l) => processInline(l)).join("<br>");
+            const inner = quoteLines.map((l) => processInline(l, styles)).join("<br>");
             htmlParts.push(
-                `<blockquote style="border-left:3px solid #ccc;margin:8px 0;padding:4px 12px;color:#666">${inner}</blockquote>`
+                `<blockquote style="${styles.blockquote}">${inner}</blockquote>`
             );
             continue;
         }
@@ -183,7 +184,7 @@ export function markdownToWechat(markdown: string, options: Partial<WechatOption
                 items.push(lines[i].replace(/^[-*+]\s/, ""));
                 i++;
             }
-            const lis = items.map((it) => `<li style="margin:4px 0">${processInline(it)}</li>`).join("");
+            const lis = items.map((it) => `<li style="${styles.li}">${processInline(it, styles)}</li>`).join("");
             htmlParts.push(`<ul style="padding-left:1.5em;margin:8px 0">${lis}</ul>`);
             continue;
         }
@@ -195,14 +196,14 @@ export function markdownToWechat(markdown: string, options: Partial<WechatOption
                 items.push(lines[i].replace(/^\d+\.\s/, ""));
                 i++;
             }
-            const lis = items.map((it) => `<li style="margin:4px 0">${processInline(it)}</li>`).join("");
+            const lis = items.map((it) => `<li style="${styles.li}">${processInline(it, styles)}</li>`).join("");
             htmlParts.push(`<ol style="padding-left:1.5em;margin:8px 0">${lis}</ol>`);
             continue;
         }
 
         // Horizontal rule
         if (/^---+$/.test(line.trim()) || /^\*\*\*+$/.test(line.trim())) {
-            htmlParts.push(`<hr style="border:none;border-top:1px solid #ddd;margin:16px 0">`);
+            htmlParts.push(`<hr style="${styles.hr}">`);
             i++;
             continue;
         }
@@ -214,12 +215,12 @@ export function markdownToWechat(markdown: string, options: Partial<WechatOption
                 tableLines.push(lines[i]);
                 i++;
             }
-            const tableHtml = renderTable(tableLines);
+            const tableHtml = renderTable(tableLines, styles);
             if (tableHtml) {
                 htmlParts.push(tableHtml);
             } else {
                 // Degrade: render as paragraphs
-                tableLines.forEach((tl) => htmlParts.push(`<p style="margin:8px 0">${processInline(tl)}</p>`));
+                tableLines.forEach((tl) => htmlParts.push(`<p style="${styles.p}">${processInline(tl, styles)}</p>`));
             }
             continue;
         }
@@ -241,10 +242,11 @@ export function markdownToWechat(markdown: string, options: Partial<WechatOption
             i++;
         }
         if (paraLines.length > 0) {
-            const text = paraLines.map((l) => processInline(l)).join("<br>");
-            htmlParts.push(`<p style="margin:8px 0;line-height:1.7">${text}</p>`);
+            const text = paraLines.map((l) => processInline(l, styles)).join("<br>");
+            htmlParts.push(`<p style="${styles.p}">${text}</p>`);
         }
     }
 
-    return htmlParts.join("\n");
+    const finalHtml = htmlParts.join("\n");
+    return `<div style="${styles.container}">${finalHtml}</div>`;
 }

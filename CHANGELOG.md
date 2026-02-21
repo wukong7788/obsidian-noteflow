@@ -2,6 +2,19 @@
 
 All notable changes to NoteFlow will be documented in this file.
 
+## [0.1.1] – 2026-02-21
+
+### Added
+- **Preview Modal**: Multi-platform live preview before copying.
+- **Support for 10 Layout Themes**: Switch between Modern, Elegant, Minimalist, etc.
+- **Ribbon Icon**: Launch preview modal instantly from the sidebar.
+
+### Improved & Fixed
+- **Paste Logic**: WeChat clipboard now properly handles rich HTML for direct pasting.
+- **Spacing Optimization**: Refined blank line handling and CSS margins for tighter, professional layouts.
+- **UI Alignment**: Cleaned up the preview header and control buttons.
+- **Infrastructure**: Switched to `bun` for faster builds and deployments.
+
 ## [0.1.0] – 2026-02-21
 
 ### Added
