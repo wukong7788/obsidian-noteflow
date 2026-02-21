@@ -1,0 +1,23 @@
+# Develoment
+node_modules/
+main.js
+*.js.map
+
+# Build output
+dist/
+build/
+
+# IDE and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Obsidian specific (if applicable)
+.obsidian/
+! .obsidian/plugins/
+! .obsidian/themes/
+
+# PNPM
+pnpm-debug.log*
