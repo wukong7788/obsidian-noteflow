@@ -84,8 +84,15 @@ export class WeChatAPI {
         const url = `${wechatWorkerUrl.replace(/\/$/, "")}${endpoint}`;
 
         const boundary = `----ObsidianNoteFlow${Math.random().toString(36).substring(2)}`;
-        const isJpeg = fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".jpeg");
-        const contentType = isJpeg ? "image/jpeg" : "image/png";
+        const ext = fileName.toLowerCase().split(".").pop();
+        const contentTypeMap: Record<string, string> = {
+            jpg: "image/jpeg",
+            jpeg: "image/jpeg",
+            png: "image/png",
+            gif: "image/gif",
+            webp: "image/webp",
+        };
+        const contentType = contentTypeMap[ext ?? ""] ?? "image/png";
 
         const header = `--${boundary}\r\nContent-Disposition: form-data; name="media"; filename="${fileName}"\r\nContent-Type: ${contentType}\r\n\r\n`;
         const footer = `\r\n--${boundary}--\r\n`;
@@ -124,11 +131,13 @@ export class WeChatAPI {
  * Simple parser for Obsidian frontmatter (YAML)
  */
 export function parseFrontmatter(markdown: string): { data: Record<string, string>, content: string } {
-    const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
-    const match = markdown.match(frontmatterRegex);
+    // Normalize line endings and allow optional trailing newline after closing ---
+    const normalized = markdown.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    const frontmatterRegex = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/;
+    const match = normalized.match(frontmatterRegex);
 
     if (!match) {
-        return { data: {}, content: markdown };
+        return { data: {}, content: normalized };
     }
 
     const yamlStr = match[1];

@@ -26,7 +26,7 @@ const authMiddleware = (req, res, next) => {
     const serverSecret = process.env.NOTEFLOW_SECRET;
 
     if (!clientSecret || clientSecret !== serverSecret) {
-        console.warn(`[Auth] Rejected: ${clientSecret === undefined ? "Missing secret" : "Invalid secret"}`);
+        console.warn(`[Auth] Rejected request to ${req.url}`);
         return res.status(401).json({ error: "Unauthorized" });
     }
     next();
@@ -36,7 +36,8 @@ const authMiddleware = (req, res, next) => {
 app.post("/wechat/draft/add", authMiddleware, async (req, res) => {
     try {
         const body = req.body;
-        console.log(`Sending to WeChat: ${JSON.stringify(body).substring(0, 100)}...`);
+        const title = body?.articles?.[0]?.title || "Unknown";
+        console.log(`Sending draft to WeChat: "${title}"...`);
 
         const accessToken = await getAccessToken();
         const wxUrl = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${accessToken}`;
