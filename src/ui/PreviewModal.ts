@@ -3,7 +3,7 @@ import type NoteFlowPlugin from "../main";
 import { markdownToWechat } from "../transforms/wechat";
 import { markdownToXhs } from "../transforms/xhs";
 import { THEMES } from "../styles/themes";
-import { WeChatAPI, parseFrontmatter } from "../api/wechat";
+import { WeChatAPI, WeChatArticle, parseFrontmatter } from "../api/wechat";
 
 type TargetPlatform = "wechat" | "xhs";
 
@@ -164,12 +164,17 @@ export class PreviewModal extends Modal {
             const activeFile = this.app.workspace.getActiveFile();
             const title = data.title || (activeFile ? activeFile.basename : "Untitled");
 
-            const article = {
+            const article: WeChatArticle = {
                 title,
                 author: data.author || "",
                 digest: data.digest || "",
                 content: updatedHtml,
-                thumb_media_id: thumbMediaId || this.plugin.settings.wechatDefaultCoverId,
+                thumb_media_id: (thumbMediaId || this.plugin.settings.wechatDefaultCoverId) as string,
+                // Optional fields from frontmatter
+                ...(data.content_source_url && { content_source_url: data.content_source_url }),
+                ...(data.is_original === "1" && { is_original: 1 }),
+                ...(data.need_open_comment === "1" && { need_open_comment: 1 }),
+                ...(data.only_fans_can_comment === "1" && { only_fans_can_comment: 1 }),
             };
 
             if (!article.thumb_media_id) {

@@ -6,10 +6,11 @@ export interface WeChatArticle {
     author?: string;
     digest?: string;
     content: string;
-    content_source_url?: string;
-    thumb_media_id: string; // Required by WeChat, we'll use a placeholder if empty
-    need_open_comment?: number;
-    only_fans_can_comment?: number;
+    content_source_url?: string;  // 原文链接
+    thumb_media_id: string;
+    is_original?: number;         // 1 = 原创声明 (requires original permission)
+    need_open_comment?: number;   // 1 = 开启评论
+    only_fans_can_comment?: number; // 1 = 仅粉丝可评论
 }
 
 export interface WeChatDraftResponse {
