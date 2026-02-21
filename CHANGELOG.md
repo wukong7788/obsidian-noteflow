@@ -2,6 +2,13 @@
 
 All notable changes to NoteFlow will be documented in this file.
 
+## [0.2.2] - 2026-02-22
+### Fixed
+- **CRLF Support**: `parseFrontmatter` now normalizes Windows line endings, preventing title/author parsing failures on notes created on Windows.
+- **Image Content-Type**: Accurate MIME types for `jpg`, `png`, `gif`, and `webp` when uploading to WeChat.
+- **Proxy Log Privacy**: Draft upload logs now only print the article title, not partial article content.
+- **Auth Log Hardening**: Auth rejection log no longer distinguishes between missing vs. invalid secret.
+
 ## [0.2.1] - 2026-02-22
 ### Added
 - **Auto Image Upload**: Local images detected in notes are automatically uploaded to WeChat on sync.
